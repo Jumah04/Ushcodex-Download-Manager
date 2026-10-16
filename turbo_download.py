@@ -119,32 +119,23 @@ def get_filename_from_url(url, resp_headers=None):
 
 
 def download_file(url, output_path=None, connections=16, custom_headers=None):
+    from url_resolver import resolve_download_url
+    print(f"\n[+] Resolving direct download stream...")
+    final_url, detected_filename, total_length, accept_ranges, err = resolve_download_url(url, custom_headers)
+
+    if err and not final_url:
+        print(f"[-] Resolution error: {err}")
+        return
+
     headers = {"User-Agent": DEFAULT_UA}
     if custom_headers:
         headers.update(custom_headers)
 
-    print(f"\n[+] Connecting to target URL...")
-    session = requests.Session()
-    session.headers.update(headers)
-
-    # 1. Inspect server capabilities
-    try:
-        head_resp = session.head(url, allow_redirects=True, timeout=20)
-        final_url = head_resp.url
-    except Exception as e:
-        print(f"[-] HEAD failed ({e}), attempting GET probe...")
-        head_resp = session.get(url, stream=True, allow_redirects=True, timeout=20)
-        final_url = head_resp.url
-
-    resp_headers = head_resp.headers
-    total_length = int(resp_headers.get("Content-Length", 0))
-    accept_ranges = "bytes" in resp_headers.get("Accept-Ranges", "").lower() or total_length > 0
-
     if not output_path:
-        output_path = get_filename_from_url(final_url, resp_headers)
+        output_path = detected_filename
 
     print(f"[+] Output file : {output_path}")
-    print(f"[+] Total size  : {human_size(total_length) if total_length > 0 else 'Unknown (Chunking disabled)'}")
+    print(f"[+] Total size  : {human_size(total_length) if total_length > 0 else 'Unknown'}")
     print(f"[+] Multi-stream: {'Supported (Bypassing Throttle)' if (accept_ranges and total_length > 0) else 'Not supported by server (Single connection)'}")
 
     # Fallback for servers that do not support Range requests
