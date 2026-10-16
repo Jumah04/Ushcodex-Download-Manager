@@ -204,11 +204,11 @@ class UshcodexDownloadManager(tk.Tk):
         self.btn_warp_action.pack(side="right")
 
         # 3. Download Hero Card
-        card = tk.Frame(self, bg=COLOR_CARD, padx=16, pady=14, highlightbackground=COLOR_CARD_BORDER, highlightthickness=1)
-        card.pack(fill="x", padx=18, pady=4)
+        self.hero_card = tk.Frame(self, bg=COLOR_CARD, padx=16, pady=14, highlightbackground=COLOR_CARD_BORDER, highlightthickness=1)
+        self.hero_card.pack(fill="x", padx=18, pady=4)
 
         # URL Input Row with High-Contrast Paste button
-        url_header = tk.Frame(card, bg=COLOR_CARD)
+        url_header = tk.Frame(self.hero_card, bg=COLOR_CARD)
         url_header.pack(fill="x", pady=(0, 6))
 
         lbl_url = tk.Label(url_header, text="Target URL (Mediafire, Google Drive, Direct File, Video):", bg=COLOR_CARD, fg=COLOR_TEXT_PRIMARY, font=("Segoe UI", 10, "bold"))
@@ -217,11 +217,11 @@ class UshcodexDownloadManager(tk.Tk):
         btn_paste = tk.Button(url_header, text="📋 Paste URL", bg=COLOR_BTN_SECONDARY, fg=COLOR_TEXT_PRIMARY, activebackground=COLOR_CARD_BORDER, relief="flat", padx=10, pady=2, font=("Segoe UI", 9, "bold"), command=self.paste_from_clipboard)
         btn_paste.pack(side="right")
 
-        self.ent_url = tk.Entry(card, bg="#0b0e14", fg="#ffffff", insertbackground=COLOR_ACCENT_BLUE, relief="flat", font=("Consolas", 10), highlightbackground=COLOR_CARD_BORDER, highlightthickness=1)
+        self.ent_url = tk.Entry(self.hero_card, bg="#0b0e14", fg="#ffffff", insertbackground=COLOR_ACCENT_BLUE, relief="flat", font=("Consolas", 10), highlightbackground=COLOR_CARD_BORDER, highlightthickness=1)
         self.ent_url.pack(fill="x", pady=(0, 10), ipady=6)
 
         # Settings row (Streams + Destination folder)
-        cfg_row = tk.Frame(card, bg=COLOR_CARD)
+        cfg_row = tk.Frame(self.hero_card, bg=COLOR_CARD)
         cfg_row.pack(fill="x", pady=(0, 12))
 
         lbl_streams = tk.Label(cfg_row, text="Parallel Streams:", bg=COLOR_CARD, fg=COLOR_TEXT_PRIMARY, font=("Segoe UI", 9, "bold"))
@@ -245,7 +245,7 @@ class UshcodexDownloadManager(tk.Tk):
         btn_open_folder.pack(side="left")
 
         # Action Buttons Row (START, PAUSE, CANCEL)
-        btn_row = tk.Frame(card, bg=COLOR_CARD)
+        btn_row = tk.Frame(self.hero_card, bg=COLOR_CARD)
         btn_row.pack(fill="x", pady=(2, 4))
 
         self.btn_start = tk.Button(btn_row, text="🚀 START DOWNLOAD", bg=COLOR_BTN_START, fg="#ffffff", activebackground="#0369a1", font=("Segoe UI", 11, "bold"), relief="flat", padx=22, pady=7, command=self.start_download)
@@ -261,8 +261,8 @@ class UshcodexDownloadManager(tk.Tk):
         btn_clear.pack(side="right")
 
         # 4. Status & Progress Meter
-        status_card = tk.Frame(self, bg=COLOR_BG_DARK, padx=18, pady=(4, 2))
-        status_card.pack(fill="x")
+        status_card = tk.Frame(self, bg=COLOR_BG_DARK, padx=18, pady=4)
+        status_card.pack(fill="x", pady=(4, 2))
 
         # File Title and Percent Header
         meta_row = tk.Frame(status_card, bg=COLOR_BG_DARK)
@@ -361,7 +361,7 @@ class UshcodexDownloadManager(tk.Tk):
             self.btn_toggle_warp.config(bg=COLOR_BTN_SECONDARY)
         else:
             # Insert drawer right under header
-            self.warp_drawer.pack(fill="x", padx=18, pady=(0, 6), before=self.children['!frame2'])
+            self.warp_drawer.pack(fill="x", padx=18, pady=(0, 6), before=self.hero_card)
             self.warp_panel_visible = True
             self.btn_toggle_warp.config(bg=COLOR_BTN_START)
             self.update_warp_indicator()
