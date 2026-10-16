@@ -1,0 +1,25 @@
+# Ushcodex Download Manager .gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Partial and temporary downloads
+*.tmp
+*.part
+*.udm_parts/
+*.turbo_parts/
+*.bin
+*.log
+
+# Large downloaded binary test assets
+*.iso
+*.mp4
+*.exe
+!Launch_*.bat
+
+# System / IDE artifacts
+.system_generated/
+.vscode/
+.idea/
