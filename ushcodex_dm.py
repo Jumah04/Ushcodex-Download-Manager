@@ -132,6 +132,13 @@ class UshcodexDownloadManager(tk.Tk):
         self.minsize(820, 600)
         self.configure(bg=COLOR_BG_DARK)
 
+        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_icon.ico")
+        if os.path.exists(icon_path):
+            try:
+                self.iconbitmap(icon_path)
+            except Exception:
+                pass
+
         self.style = ttk.Style(self)
         self.style.theme_use("clam")
 
@@ -150,7 +157,9 @@ class UshcodexDownloadManager(tk.Tk):
         self.is_downloading = False
         self.stop_event = threading.Event()
         self.workers = []
-        self.dest_folder = os.path.abspath(r"c:\Users\PC\Documents\ABU WiFi")
+        default_downloads = os.path.join(os.path.expanduser("~"), "Downloads")
+        os.makedirs(default_downloads, exist_ok=True)
+        self.dest_folder = default_downloads
         self.active_raw_url = ""
         self.active_out_path = ""
         self.total_file_size = 0
