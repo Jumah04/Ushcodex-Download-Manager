@@ -699,6 +699,9 @@ class UshcodexDownloadManager(tk.Tk):
                         status
                     ))
 
+            t_stream_start = time.time()
+            bytes_at_start = existing_total
+
             for i in range(connections):
                 sb = i * chunk_size
                 eb = min((i + 1) * chunk_size - 1, total_size - 1)
@@ -709,6 +712,15 @@ class UshcodexDownloadManager(tk.Tk):
 
             for w in self.workers:
                 w.join()
+
+            t_stream_end = time.time()
+            elapsed_time = max(0.1, t_stream_end - t_stream_start)
+            net_bytes_downloaded = max(0, total_size - bytes_at_start)
+            avg_speed_bps = net_bytes_downloaded / elapsed_time if elapsed_time > 0 else 0
+            final_avg_speed_str = f"{human_size(avg_speed_bps)}/s"
+            duration_min = int(elapsed_time // 60)
+            duration_sec = int(elapsed_time % 60)
+            duration_str = f"{duration_min}m {duration_sec}s" if duration_min > 0 else f"{duration_sec}s"
 
             if self.stop_event.is_set():
                 self.finish_paused()
@@ -728,6 +740,7 @@ class UshcodexDownloadManager(tk.Tk):
             logger.log("Computing SHA-256 hash of assembled file...")
             computed_hash = compute_file_sha256(self.active_out_path)
             logger.log(f"SHA-256 Hash Verified: {computed_hash}")
+            logger.log(f"Average Download Speed: {final_avg_speed_str} (Duration: {duration_str})")
 
             # Save to Download History
             history_manager.add_entry(
@@ -735,13 +748,13 @@ class UshcodexDownloadManager(tk.Tk):
                 filename=filename,
                 filepath=self.active_out_path,
                 size=total_size,
-                speed=self.active_speed_str,
+                speed=final_avg_speed_str,
                 sha256=computed_hash,
                 status="Completed"
             )
             self.refresh_history_table()
 
-            self.finish_success(self.active_out_path, computed_hash)
+            self.finish_success(self.active_out_path, computed_hash, final_avg_speed_str, duration_str)
 
         except Exception as e:
             logger.log(f"Execution error: {e}", level="ERROR")
@@ -749,6 +762,8 @@ class UshcodexDownloadManager(tk.Tk):
             self.finish_paused()
 
     def single_stream_download(self, final_url, headers):
+        t_start = time.time()
+        start_bytes = self.total_bytes_downloaded
         with requests.get(final_url, headers=headers, stream=True, timeout=30) as r:
             r.raise_for_status()
             with open(self.active_out_path, "wb") as f:
@@ -760,6 +775,14 @@ class UshcodexDownloadManager(tk.Tk):
                         with self.bytes_lock:
                             self.total_bytes_downloaded += len(chunk)
 
+        elapsed = max(0.1, time.time() - t_start)
+        net_b = max(0, self.total_bytes_downloaded - start_bytes)
+        avg_spd = net_b / elapsed if elapsed > 0 else 0
+        final_speed_str = f"{human_size(avg_spd)}/s"
+        d_min = int(elapsed // 60)
+        d_sec = int(elapsed % 60)
+        dur_str = f"{d_min}m {d_sec}s" if d_min > 0 else f"{d_sec}s"
+
         # Hash computation for single stream
         computed_hash = compute_file_sha256(self.active_out_path)
         history_manager.add_entry(
@@ -767,12 +790,12 @@ class UshcodexDownloadManager(tk.Tk):
             filename=os.path.basename(self.active_out_path),
             filepath=self.active_out_path,
             size=os.path.getsize(self.active_out_path),
-            speed=self.active_speed_str,
+            speed=final_speed_str,
             sha256=computed_hash,
             status="Completed"
         )
         self.refresh_history_table()
-        self.finish_success(self.active_out_path, computed_hash)
+        self.finish_success(self.active_out_path, computed_hash, final_speed_str, dur_str)
 
     def ui_tick(self):
         if self.is_downloading and self.total_file_size > 0:
@@ -803,21 +826,22 @@ class UshcodexDownloadManager(tk.Tk):
 
         self.after(300, self.ui_tick)
 
-    def finish_success(self, path, sha256_hash=""):
+    def finish_success(self, path, sha256_hash="", speed="--", duration="--"):
         self.is_downloading = False
         self.progress_bar["value"] = 100
         self.lbl_pct.config(text="100.0%")
         self.lbl_target_name.config(text=f"🎉 Completed & Verified: {os.path.basename(path)}")
-        logger.log(f"[SUCCESS] Download completed and verified: {path}")
+        logger.log(f"[SUCCESS] Download completed and verified: {path} (Avg Speed: {speed}, Time: {duration})")
 
         self.btn_start.config(state="normal", text="🚀 START DOWNLOAD", bg=COLOR_BTN_START)
         self.btn_pause.config(state="disabled")
         self.btn_stop.config(state="disabled")
 
         hash_display = f"\nSHA-256 Hash:\n{sha256_hash}\n" if sha256_hash else ""
+        stats_display = f"\nAverage Speed: {speed}\nTotal Time: {duration}\n" if speed != "--" else ""
         messagebox.showinfo(
             "Download Complete & Verified",
-            f"File downloaded and verified 100% intact!\n\nFile:\n{os.path.basename(path)}\n{hash_display}\nLocation:\n{path}"
+            f"File downloaded and verified 100% intact!\n\nFile:\n{os.path.basename(path)}{stats_display}{hash_display}\nLocation:\n{path}"
         )
 
     def finish_paused(self):
