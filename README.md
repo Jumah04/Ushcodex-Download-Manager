@@ -21,7 +21,9 @@ A high-performance, multi-threaded desktop download manager engineered to bypass
 
 * **`ushcodex_dm.py`**: The primary GUI application built in Python/Tkinter with high-contrast styling and non-blocking event loops.
 * **`url_resolver.py`**: Smart URL analyzer and parser for Mediafire, Google Drive, and generic direct streams.
-* **`downloader.py`**: High-concurrency worker threads, chunk slicing, and file reconstruction engine.
+* **`downloader.py`**: High-concurrency worker threads, chunk slicing, strict boundary validation, and file reconstruction engine.
+* **`history_manager.py`**: Persistent download records, status tracking, and automated SHA-256 hash auditing.
+* **`logger.py`**: Persistent process logging system (`ushcodex_dm.log`) and live UI diagnostics.
 * **`warp_manager.py`**: Detection, installation, and management of Cloudflare WARP client.
 * **`abu_network_audit.py`**: Diagnostic suite for testing TCP throughput, UDP reachability, and network QoS queues.
 * **`Launch_Ushcodex_DM.bat`**: 1-click Windows launcher.
